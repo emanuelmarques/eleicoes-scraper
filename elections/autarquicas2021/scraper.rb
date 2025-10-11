@@ -2,14 +2,11 @@ require_relative '../../lib/election_scraper'
 
 class Autarquicas2021 < ElectionScraper::Base
   ELECTION_URL = 'https://www.eleicoes.mai.gov.pt/autarquicas2021/resultados/territorio-nacional'
-  
-  def scrape_all
-    navigate_to(ELECTION_URL)
-    sleep 2 # Give the page time to load initially
   OUTPUT_FILE = File.join(__dir__, 'data', 'autarquicas2021.csv')
   
   def scrape_all
     navigate_to(ELECTION_URL)
+    sleep 2 # Give the page time to load initially
     
     get_districts.each do |distrito|
       get_municipalities(distrito).each do |concelho|
