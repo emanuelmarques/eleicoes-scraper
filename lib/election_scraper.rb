@@ -7,8 +7,13 @@ module ElectionScraper
 
     def initialize
       @col_sep = '|'
-      client = Selenium::WebDriver::Remote::Http::Default.new
-      @browser = Watir::Browser.new :chrome, http_client: client
+      options = Selenium::WebDriver::Chrome::Options.new
+      options.add_argument('--headless') # Run in headless mode for CI
+      options.add_argument('--no-sandbox')
+      options.add_argument('--disable-dev-shm-usage')
+      
+      client = Watir::HttpClient.new
+      @browser = Watir::Browser.new :chrome, options: options, http_client: client
       @browser.window.move_to 1400, 0
     end
 
