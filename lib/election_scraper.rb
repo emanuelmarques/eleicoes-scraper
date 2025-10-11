@@ -78,21 +78,49 @@ module ElectionScraper
       
       # Wait and try to find the navigation element
       begin
+        sleep 2 # Wait for page to load
+        
         # Try different possible selectors for the Localidades navigation
         if browser.link(text: 'Localidades').present?
           browser.link(text: 'Localidades').click
         elsif browser.link(text: 'Por Local').present?
           browser.link(text: 'Por Local').click
-        elsif browser.button(text: /Local|Localidades/).present?
-          browser.button(text: /Local|Localidades/).click
-        elsif browser.element(role: 'tab', text: /Local|Localidades/).present?
-          browser.element(role: 'tab', text: /Local|Localidades/).click
+        elsif browser.link(text: 'Por Distrito/Ilha').present?
+          browser.link(text: 'Por Distrito/Ilha').click
+        elsif browser.button(text: /Local|Localidades|Distrito/).present?
+          browser.button(text: /Local|Localidades|Distrito/).click
+        elsif browser.element(role: 'tab', text: /Local|Localidades|Distrito/).present?
+          browser.element(role: 'tab', text: /Local|Localidades|Distrito/).click
+        elsif browser.element(class: /tabpanel|tab-panel/, text: /Local|Localidades|Distrito/).present?
+          browser.element(class: /tabpanel|tab-panel/, text: /Local|Localidades|Distrito/).click
         else
-          puts "Warning: Could not find Localidades navigation. The page might already be in the correct view."
+          # Para autárquicas 2021, tente clicar no link que contenha "Distrito" ou "Local"
+          elements = browser.elements(xpath: "//*[contains(text(), 'Distrito') or contains(text(), 'Local')]")
+          if elements.any?
+            elements.first.click
+          else
+            puts "Warning: Could not find navigation element. Page structure:"
+            puts browser.html
+            raise "Could not find navigation element"
+          end
         end
         sleep 2 # Wait for navigation to complete
       rescue => e
         puts "Warning: Error during navigation: #{e.message}. Continuing anyway..."
+        puts "Current URL: #{browser.url}"
+        puts "Page Title: #{browser.title}"
+      end
+      
+      # Verify if we're in the correct view by checking for the district selector
+      begin
+        distrito_list = browser.select_list(aria_label: 'Distrito/Região Autónoma')
+        distrito_list.wait_until(&:present?)
+        puts "Successfully navigated to district selection view"
+      rescue => e
+        puts "Failed to verify district selector presence: #{e.message}"
+        puts "Current page content:"
+        puts browser.text
+        raise "Navigation failed: Could not find district selector"
       end
     end
 
