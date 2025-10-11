@@ -74,7 +74,25 @@ module ElectionScraper
       # Add CM parameter if it's autarquicas2021
       url = "#{url}?election=CM" if url.include?('autarquicas2021')
       browser.goto url
-      # The new page structure doesn't require clicking the Localidades link
+      
+      # Wait and try to find the navigation element
+      begin
+        # Try different possible selectors for the Localidades navigation
+        if browser.link(text: 'Localidades').present?
+          browser.link(text: 'Localidades').click
+        elsif browser.link(text: 'Por Local').present?
+          browser.link(text: 'Por Local').click
+        elsif browser.button(text: /Local|Localidades/).present?
+          browser.button(text: /Local|Localidades/).click
+        elsif browser.element(role: 'tab', text: /Local|Localidades/).present?
+          browser.element(role: 'tab', text: /Local|Localidades/).click
+        else
+          puts "Warning: Could not find Localidades navigation. The page might already be in the correct view."
+        end
+        sleep 2 # Wait for navigation to complete
+      rescue => e
+        puts "Warning: Error during navigation: #{e.message}. Continuing anyway..."
+      end
     end
 
     def close
