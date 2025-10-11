@@ -1,4 +1,4 @@
-name: Periodic Election Data Scraper
+name: Legislativas 2022 Scraper
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Allows manual trigger of the workflow
 
 jobs:
-  scrape:
+  scrape-legislativas:
     runs-on: ubuntu-latest
     
     steps:
@@ -33,13 +33,9 @@ jobs:
         run: |
           ruby elections/legislativas2022/scraper.rb
           
-      - name: Run Autarquicas 2021 scraper
-        run: |
-          ruby elections/autarquicas2021/scraper.rb
-          
       - name: Commit and push if changes
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
-          git add elections/*/data/*.csv
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update election data [skip ci]" && git push)
+          git add elections/legislativas2022/data/*.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Legislativas 2022 data [skip ci]" && git push)
