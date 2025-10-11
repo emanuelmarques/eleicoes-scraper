@@ -4,6 +4,12 @@ class Autarquicas2021 < ElectionScraper::Base
   ELECTION_URL = 'https://www.eleicoes.mai.gov.pt/autarquicas2021/resultados/territorio-nacional'
   OUTPUT_FILE = File.join(__dir__, 'data', 'autarquicas2021.csv')
   
+  def initialize
+    super
+    # Ensure the data directory exists
+    FileUtils.mkdir_p(File.join(__dir__, 'data'))
+  end
+  
   def scrape_all
     navigate_to(ELECTION_URL)
     sleep 2 # Give the page time to load initially

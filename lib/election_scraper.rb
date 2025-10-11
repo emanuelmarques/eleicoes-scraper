@@ -1,5 +1,6 @@
 require 'watir'
 require 'csv'
+require 'fileutils'
 
 module ElectionScraper
   class Base
