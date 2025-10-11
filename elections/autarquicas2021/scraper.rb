@@ -11,17 +11,32 @@ class Autarquicas2021 < ElectionScraper::Base
   end
   
   def scrape_all
+    puts "Iniciando scraper das Autárquicas 2021..."
     navigate_to(ELECTION_URL)
     sleep 2 # Give the page time to load initially
     
-    get_districts.each do |distrito|
-      get_municipalities(distrito).each do |concelho|
-        get_parishes(distrito, concelho).each do |freguesia|
+    districts = get_districts
+    puts "Encontrados #{districts.size} distritos"
+    
+    districts.each do |distrito|
+      puts "\nProcessando distrito: #{distrito}"
+      municipalities = get_municipalities(distrito)
+      puts "Encontrados #{municipalities.size} concelhos em #{distrito}"
+      
+      municipalities.each do |concelho|
+        puts "  Processando concelho: #{concelho}"
+        parishes = get_parishes(distrito, concelho)
+        puts "  Encontradas #{parishes.size} freguesias em #{concelho}"
+        
+        parishes.each do |freguesia|
+          puts "    Processando freguesia: #{freguesia}"
           scrape_location(distrito, concelho, freguesia, OUTPUT_FILE)
           sleep 1
         end
       end
     end
+    
+    puts "\nScraping concluído! Resultados salvos em: #{OUTPUT_FILE}"
   end
 end
 
