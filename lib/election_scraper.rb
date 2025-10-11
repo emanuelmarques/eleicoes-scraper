@@ -18,17 +18,43 @@ module ElectionScraper
     end
 
     def scrape_location(distrito, concelho, freguesia, output_file)
-      distrito_list = browser.select_lists(aria_label: 'Distrito/Região Autónoma')
-      distrito_list[0].wait_until(&:present?).select(text: distrito)
+      retry_count = 0
+      max_retries = 3
       
-      concelho_list = browser.select_lists(aria_label: 'Concelho')
-      concelho_list[0].wait_until(&:present?).select(text: concelho)
-      
-      freguesia_list = browser.select_lists(aria_label: 'Freguesia')
-      freguesia_list[0].wait_until(&:present?).select(text: freguesia)
-      
-      sleep 2
-      scrape_results(distrito, concelho, freguesia, output_file)
+      begin
+        # Wait for the district select to be present and enabled
+        distrito_list = browser.select_list(aria_label: 'Distrito/Região Autónoma')
+        distrito_list.wait_until(&:present?)
+        distrito_list.wait_until(&:enabled?)
+        distrito_list.select(text: distrito)
+        sleep 1
+        
+        # Wait for concelho select to be present and enabled
+        concelho_list = browser.select_list(aria_label: 'Concelho')
+        concelho_list.wait_until(&:present?)
+        concelho_list.wait_until(&:enabled?)
+        concelho_list.select(text: concelho)
+        sleep 1
+        
+        # Wait for freguesia select to be present and enabled
+        freguesia_list = browser.select_list(aria_label: 'Freguesia')
+        freguesia_list.wait_until(&:present?)
+        freguesia_list.wait_until(&:enabled?)
+        freguesia_list.select(text: freguesia)
+        sleep 2
+        
+        scrape_results(distrito, concelho, freguesia, output_file)
+      rescue Watir::Exception::UnknownObjectException, Watir::Exception::NoMatchingOptionError => e
+        retry_count += 1
+        if retry_count <= max_retries
+          puts "Retrying #{distrito}/#{concelho}/#{freguesia} (attempt #{retry_count}/#{max_retries})"
+          sleep 2 * retry_count
+          retry
+        else
+          puts "Failed to scrape #{distrito}/#{concelho}/#{freguesia} after #{max_retries} attempts: #{e.message}"
+          raise
+        end
+      end
     end
 
     def scrape_results(distrito, concelho, freguesia, output_file)
@@ -45,8 +71,10 @@ module ElectionScraper
     end
 
     def navigate_to(url)
+      # Add CM parameter if it's autarquicas2021
+      url = "#{url}?election=CM" if url.include?('autarquicas2021')
       browser.goto url
-      browser.link(text: 'Localidades').click
+      # The new page structure doesn't require clicking the Localidades link
     end
 
     def close
